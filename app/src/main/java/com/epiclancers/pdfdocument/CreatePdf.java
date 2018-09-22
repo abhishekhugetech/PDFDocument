@@ -20,9 +20,11 @@ import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.Utilities;
+import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.vdurmont.emoji.EmojiParser;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,9 +36,9 @@ public class CreatePdf {
     public static String pdfFilePath;
     public static int PDF_WIDTH = 170;
 
-    public void generete(Context context,Activity activity){
+    public void generete(Context context,Activity activity, String name){
 
-        pdfFilePath = Environment.getExternalStorageDirectory() + "/PDF/invoice.pdf";
+        pdfFilePath = Environment.getExternalStorageDirectory() + "/PDF/"+name+".pdf";
 
         askForPermission(context , activity);
         createFolder();
@@ -79,7 +81,9 @@ public class CreatePdf {
 
     public void createPdf(String dest) throws IOException, DocumentException {
         Document document = new Document(PageSize.A4);
-        PdfWriter.getInstance(document, new FileOutputStream(dest));
+        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(dest));
+        document.setMargins(0,0,0,20);
+        writer.setPdfVersion(PdfWriter.VERSION_1_5);
         document.open();
         addTitle(document);
         createTopTable(document);
@@ -87,6 +91,11 @@ public class CreatePdf {
         addThirdSection(document);
         createPdfWithTable(document);
         addBottomFirst(document);
+        cbDiscountBelow(document);
+        addBottomSecond(document);
+        addThirdLastSection(document);
+        thankYouNoteByBusiness(document);
+        thankYouNoteByApp(document);
         document.close();
     }
 
@@ -95,8 +104,8 @@ public class CreatePdf {
 
     // Adds Title TAX INVOICE to the PDF File
     public void addTitle(Document document){
-        Font chapterFont = FontFactory.getFont(FontFactory.defaultEncoding, 13, Font.BOLD);
-        Paragraph chunk = new Paragraph("TAX INVOICE", chapterFont);
+        Font chapterFont = FontFactory.getFont(FontFactory.defaultEncoding, 25, Font.BOLD );
+        Paragraph chunk = new Paragraph("Sri Banni Enterprises", chapterFont);
         chunk.setAlignment(Element.ALIGN_CENTER);
         try {
             document.add(chunk);
@@ -149,7 +158,6 @@ public class CreatePdf {
         Font font = FontFactory.getFont(FontFactory.defaultEncoding, 12, Font.BOLD);
         contentLeft.addElement(new Phrase("{Business Name} " , font) );
         contentLeft.addElement(new Phrase("{Business Address Starts}"));
-        contentLeft.addElement(new Phrase("\n"));
         contentLeft.addElement(new Phrase("{Business City, PIN & State} "));
         contentLeft.addElement(new Phrase("{Business Phone No.}"));
         contentLeft.addElement(new Phrase("{Business Email} "));
@@ -293,7 +301,6 @@ public class CreatePdf {
         contentLeft.addElement(new Phrase("Buyer: " , font) );
         contentLeft.addElement(new Phrase("{Customer Name}"));
         contentLeft.addElement(new Phrase("{Customer Address}"));
-        contentLeft.addElement(new Phrase("\n"));
         contentLeft.addElement(new Phrase("{Customer Phone No.} "));
         contentLeft.addElement(new Phrase("{Customer GSTIN}"));
 
@@ -357,7 +364,9 @@ public class CreatePdf {
         PdfPTable table = new PdfPTable(9);
         table.setTotalWidth( Utilities.millimetersToPoints(PDF_WIDTH) );
         table.setLockedWidth( true );
-        table.setWidths(new int[]{1,5,2,1,1,1,2,2,2});
+        //table.setWidths(new int[]{1,5,2,1,1,1,2,2,2});
+        //table.setWidths(new int[]{2,10,4,2,2,2,4,4,4});
+        table.setWidths(new int[]{2,12,4,2,2,2,2,4,4});
 
         PdfPCell serialno = new PdfPCell();
         serialno.addElement(new Phrase("S/No",font));
@@ -390,7 +399,7 @@ public class CreatePdf {
         table.addCell(hsncode);
 
         PdfPCell gst = new PdfPCell();
-        gst.addElement(new Phrase("GST%",font));
+        gst.addElement(new Phrase("GST",font));
         //gst.setBorderColor(BaseColor.WHITE);
         //gst.disableBorderSide(Rectangle.RIGHT);
         gst.disableBorderSide(Rectangle.TOP);
@@ -400,7 +409,7 @@ public class CreatePdf {
         table.addCell(gst);
 
         PdfPCell discount = new PdfPCell();
-        discount.addElement(new Phrase("Dis%",font));
+        discount.addElement(new Phrase("Dis",font));
         //discount.setBorderColor(BaseColor.WHITE);
         //discount.disableBorderSide(Rectangle.RIGHT);
         discount.disableBorderSide(Rectangle.TOP);
@@ -456,7 +465,7 @@ public class CreatePdf {
     // Returns the number of items in the sale
     public int getSaleItemCount(String saleid){
 
-        return 6;
+        return 5;
     }
 
     // Add Tables in the PDF after the title
@@ -465,7 +474,8 @@ public class CreatePdf {
             PdfPTable pdfPTable = new PdfPTable(9);
             pdfPTable.setTotalWidth( Utilities.millimetersToPoints(PDF_WIDTH) );
             pdfPTable.setLockedWidth( true );
-            pdfPTable.setWidths(new int[]{1,5,2,1,1,1,2,2,2});
+            //pdfPTable.setWidths(new int[]{2,10,4,2,2,2,4,4,4});
+            pdfPTable.setWidths(new int[]{2,12,4,2,2,2,2,4,4});
             PdfPCell pdfPCell = new PdfPCell(invoiceHeader());
             pdfPCell.setBackgroundColor(BaseColor.GRAY);
             pdfPCell.setColspan(9);
@@ -473,13 +483,23 @@ public class CreatePdf {
             pdfPTable.setHeaderRows(1);
             for (int i = 0 ; i < getSaleItemCount("abc") ; i++){
                 int i1 = 40;
-                pdfPTable.addCell((i+1)+"");
-                pdfPTable.addCell("Horlics");
+                pdfPTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_RIGHT);
+                pdfPTable.getDefaultCell().setVerticalAlignment(Element.ALIGN_RIGHT);
+                pdfPTable.addCell((i+1)+".");
+                pdfPTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_LEFT);
+                pdfPTable.getDefaultCell().setVerticalAlignment(Element.ALIGN_LEFT);
+                pdfPTable.addCell("Horliks");
+                pdfPTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_RIGHT);
+                pdfPTable.getDefaultCell().setVerticalAlignment(Element.ALIGN_RIGHT);
                 pdfPTable.addCell("3256");
-                pdfPTable.addCell("18"+"%");
-                pdfPTable.addCell("15"+"%");
+                pdfPTable.addCell("18%");
+                pdfPTable.addCell("15%");
+                pdfPTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
+                pdfPTable.getDefaultCell().setVerticalAlignment(Element.ALIGN_CENTER);
                 pdfPTable.addCell(i+"");
                 pdfPTable.addCell("Kg");
+                pdfPTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_RIGHT);
+                pdfPTable.getDefaultCell().setVerticalAlignment(Element.ALIGN_RIGHT);
                 pdfPTable.addCell(i1+"");
                 pdfPTable.addCell((i+1)*i1+"");
             }
@@ -497,25 +517,180 @@ public class CreatePdf {
 
 
     // BOTTOM FIRST SECTION
-
     public void addBottomFirst(Document document) throws DocumentException {
         PdfPTable table = new PdfPTable(2);
         table.setTotalWidth(Utilities.millimetersToPoints(PDF_WIDTH));
         table.setLockedWidth(true);
-        table.setWidths(new int[]{5,4});
+        table.setWidths(new int[]{6,3});
         PdfPCell cell;
         cell = new PdfPCell();
         cell.setPaddingLeft(10);
         cell.setPaddingBottom(10);
         //cell.addElement(contentLeftSecondSection());
-        addCells(cell);
+        // Add Empty space
+        addEmptyCells(cell);
         cell.setRowspan(7);
         table.addCell(cell);
-        table.addCell( invoice() );
-        table.addCell( afterInvoiceEmpty() );
-        table.addCell( afterEmptyDate() );
-        table.addCell( afterDateGst() );
-        table.addCell( afterGstBank() );
+        // Taxable Amount Adding to PDF
+        table.addCell( taxableAmount() );
+        table.addCell( allThreeTaxes() );
+        table.addCell( cbDiscount() );
+        document.add(table);
+    }
+
+    // Create content left of Second section
+    public void addEmptyCells(PdfPCell contentLeft){
+        contentLeft.addElement(new Phrase("\n"));
+        contentLeft.addElement(new Phrase("\n"));
+        contentLeft.addElement(new Phrase("\n"));
+        contentLeft.addElement(new Phrase("\n"));
+
+    }
+
+    // Adding Taxable Amount
+    public PdfPTable taxableAmount() throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        PdfPTable table = new PdfPTable(2);
+        table.setWidths(new int[]{6,2});
+        PdfPCell invoiceCell = new PdfPCell();
+        invoiceCell.addElement(new Phrase("Total Taxable Amount:",font));
+        //invoiceCell.setBorderColor(BaseColor.WHITE);
+        invoiceCell.disableBorderSide(Rectangle.LEFT);
+        invoiceCell.disableBorderSide(Rectangle.RIGHT);
+        invoiceCell.disableBorderSide(Rectangle.TOP);
+        invoiceCell.disableBorderSide(Rectangle.BOTTOM);
+        invoiceCell.setPaddingBottom(5);
+        invoiceCell.setPaddingLeft(5);
+        table.addCell(invoiceCell);
+        PdfPCell paymentCell = new PdfPCell();
+        paymentCell.addElement(new Phrase("148455",font));
+        //paymentCell.setBorderColor(BaseColor.WHITE);
+        //paymentCell.disableBorderSide(Rectangle.LEFT);
+        paymentCell.disableBorderSide(Rectangle.RIGHT);
+        paymentCell.disableBorderSide(Rectangle.TOP);
+        paymentCell.disableBorderSide(Rectangle.BOTTOM);
+        paymentCell.setPaddingBottom(5);
+        paymentCell.setPaddingLeft(5);
+        table.addCell(paymentCell);
+        return table;
+    }
+
+    // Four Column Table containing Taxes amount
+    public PdfPTable allThreeTaxes() throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        PdfPTable table = new PdfPTable(4);
+        table.setWidths(new int[]{2,2,2,2});
+
+        PdfPCell invoiceCell = new PdfPCell();
+        invoiceCell.addElement(new Phrase("",font));
+        //invoiceCell.setBorderColor(BaseColor.WHITE);
+        invoiceCell.disableBorderSide(Rectangle.LEFT);
+        invoiceCell.disableBorderSide(Rectangle.RIGHT);
+        invoiceCell.disableBorderSide(Rectangle.TOP);
+        invoiceCell.disableBorderSide(Rectangle.BOTTOM);
+        invoiceCell.setPaddingBottom(5);
+        invoiceCell.setPaddingLeft(5);
+        table.addCell(invoiceCell);
+
+        PdfPCell paymentCell = new PdfPCell();
+        paymentCell.addElement(new Phrase("IGST:",font));
+        paymentCell.addElement(new Phrase("SGST:",font));
+        paymentCell.addElement(new Phrase("CGST:",font));
+        //paymentCell.setBorderColor(BaseColor.WHITE);
+        //paymentCell.disableBorderSide(Rectangle.LEFT);
+        paymentCell.disableBorderSide(Rectangle.RIGHT);
+        paymentCell.disableBorderSide(Rectangle.TOP);
+        paymentCell.disableBorderSide(Rectangle.BOTTOM);
+        paymentCell.setPaddingBottom(5);
+        paymentCell.setPaddingLeft(5);
+        table.addCell(paymentCell);
+
+        PdfPCell po = new PdfPCell();
+        po.addElement(new Phrase("",font));
+        //invoiceCell.setBorderColor(BaseColor.WHITE);
+        //po.disableBorderSide(Rectangle.LEFT);
+        po.disableBorderSide(Rectangle.RIGHT);
+        po.disableBorderSide(Rectangle.TOP);
+        po.disableBorderSide(Rectangle.BOTTOM);
+        po.setPaddingBottom(5);
+        po.setPaddingLeft(5);
+        table.addCell(po);
+
+        PdfPCell io = new PdfPCell();
+        io.addElement(new Phrase("",font));
+        //paymentCell.setBorderColor(BaseColor.WHITE);
+        //paymentCell.disableBorderSide(Rectangle.LEFT);
+        io.disableBorderSide(Rectangle.RIGHT);
+        io.disableBorderSide(Rectangle.TOP);
+        io.disableBorderSide(Rectangle.BOTTOM);
+        io.setPaddingBottom(5);
+        io.setPaddingLeft(5);
+        table.addCell(io);
+        return table;
+    }
+
+    // CB Discount
+    public PdfPTable cbDiscount() throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        PdfPTable table = new PdfPTable(2);
+        table.setWidths(new int[]{3,1});
+        PdfPCell invoiceCell = new PdfPCell(new Phrase("CB Discount:",font));
+        //invoiceCell.setBorderColor(BaseColor.WHITE);
+        invoiceCell.disableBorderSide(Rectangle.LEFT);
+        invoiceCell.disableBorderSide(Rectangle.TOP);
+        invoiceCell.disableBorderSide(Rectangle.BOTTOM);
+        table.addCell(invoiceCell);
+
+        PdfPCell paymentCell = new PdfPCell();
+        paymentCell.addElement(new Phrase("500",font));
+        //paymentCell.setBorderColor(BaseColor.WHITE);
+        paymentCell.disableBorderSide(Rectangle.RIGHT);
+        paymentCell.disableBorderSide(Rectangle.TOP);
+        paymentCell.disableBorderSide(Rectangle.BOTTOM);
+        table.addCell(paymentCell);
+
+        return table;
+    }
+
+    // Grand Total Amount
+    public PdfPTable grandTotalAmount() throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        PdfPTable table = new PdfPTable(2);
+        table.setWidths(new int[]{8,2});
+        PdfPCell invoiceCell = new PdfPCell();
+        invoiceCell.addElement(new Phrase("Grand Total Amount:",font));
+        invoiceCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        //invoiceCell.setBorderColor(BaseColor.WHITE);
+        invoiceCell.disableBorderSide(Rectangle.LEFT);
+        //invoiceCell.disableBorderSide(Rectangle.RIGHT);
+        invoiceCell.disableBorderSide(Rectangle.TOP);
+        invoiceCell.disableBorderSide(Rectangle.BOTTOM);
+        table.addCell(invoiceCell);
+
+        PdfPCell paymentCell = new PdfPCell();
+        paymentCell.addElement(new Phrase("1484",font));
+        //paymentCell.setBorderColor(BaseColor.WHITE);
+        //paymentCell.disableBorderSide(Rectangle.LEFT);
+          paymentCell.disableBorderSide(Rectangle.RIGHT);
+          paymentCell.disableBorderSide(Rectangle.TOP);
+          paymentCell.disableBorderSide(Rectangle.BOTTOM);
+        table.addCell(paymentCell);
+        return table;
+    }
+
+    public void cbDiscountBelow(Document document) throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD );
+        PdfPTable table = new PdfPTable(2);
+        table.setTotalWidth(Utilities.millimetersToPoints(PDF_WIDTH));
+        table.setLockedWidth(true);
+        table.setWidths(new int[]{6,3});
+        PdfPCell invoiceCell = new PdfPCell(new Phrase("Cashback Code: DFGVF85412",font));
+        table.addCell(invoiceCell);
+
+        PdfPCell paymentCell = new PdfPCell();
+        paymentCell.addElement(grandTotalAmount());
+        table.addCell(paymentCell);
+
         document.add(table);
     }
 
@@ -523,8 +698,103 @@ public class CreatePdf {
 
     // BOTTOM SECOND SECTION
 
-
+    public void addBottomSecond(Document document) throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 11, Font.BOLD);
+        PdfPTable table = new PdfPTable(1);
+        table.setTotalWidth(Utilities.millimetersToPoints(PDF_WIDTH));
+        table.setLockedWidth(true);
+        PdfPCell cell;
+        cell = new PdfPCell();
+        cell.addElement(new Phrase("Amount in Words : " , font));
+        cell.addElement(new Phrase(" "));
+        cell.setPaddingLeft(10);
+        cell.setPaddingBottom(10);
+        cell.setRowspan(2);
+        table.addCell(cell);
+        document.add(table);
+    }
 
     // BOTTOM THIRD SECTION
+
+    public void addThirdLastSection(Document document) throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        PdfPTable table = new PdfPTable(2);
+        table.setTotalWidth(Utilities.millimetersToPoints(PDF_WIDTH));
+        table.setLockedWidth(true);
+        table.setWidths(new int[]{6,3});
+
+        PdfPCell cell;
+        cell = new PdfPCell();
+        cell.setPaddingLeft(10);
+        cell.setPaddingBottom(10);
+        //cell.addElement(contentLeftSecondSection());
+        addDispatchDetails(cell);
+        cell.setRowspan(2);
+        table.addCell(cell);
+        PdfPCell pdfPCell = new PdfPCell();
+        pdfPCell.addElement(new Phrase(" For {Store} Name\n ",font));
+        pdfPCell.addElement(new Phrase("\nAuthorized Signatory" , font));
+        pdfPCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        pdfPCell.setVerticalAlignment(Element.ALIGN_CENTER);
+        pdfPCell.setPaddingBottom(5);
+        pdfPCell.setPaddingLeft(5);
+        table.addCell( pdfPCell );
+        document.add(table);
+    }
+
+    // Add Dispach Details
+    public void addDispatchDetails(PdfPCell contentLeft){
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        Font fontNormal = FontFactory.getFont(FontFactory.defaultEncoding, 8);
+        contentLeft.addElement(new Phrase("Dispatch from: {Sellar City}" , fontNormal ) );
+        contentLeft.addElement(new Phrase("Dispatch to: {Customer City}",fontNormal));
+
+    }
+
+    public void thankYouNoteByBusiness(Document document) throws DocumentException {
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        PdfPTable table = new PdfPTable(1);
+        table.setTotalWidth(Utilities.millimetersToPoints(PDF_WIDTH));
+        table.setLockedWidth(true);
+        PdfPCell invoiceCell = new PdfPCell(new Phrase("Thank You for the Business :) ",font));
+        invoiceCell.setVerticalAlignment(Element.ALIGN_CENTER);
+        invoiceCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        invoiceCell.setPaddingBottom(5);
+        invoiceCell.setPaddingLeft(5);
+        table.addCell(invoiceCell);
+        document.add(table);
+    }
+
+    public void thankYouNoteByApp(Document document) throws DocumentException {
+
+        Font font = FontFactory.getFont(FontFactory.defaultEncoding, 8, Font.BOLD);
+        PdfPTable table = new PdfPTable(1);
+        table.setTotalWidth(Utilities.millimetersToPoints(PDF_WIDTH));
+        table.setLockedWidth(true);
+
+
+        PdfPCell invoiceCell3 = new PdfPCell(new Phrase("\n",font));
+        invoiceCell3.disableBorderSide(Rectangle.LEFT);
+        invoiceCell3.disableBorderSide(Rectangle.RIGHT);
+        invoiceCell3.disableBorderSide(Rectangle.TOP);
+        invoiceCell3.disableBorderSide(Rectangle.BOTTOM);
+
+        PdfPCell invoiceCell = new PdfPCell(new Paragraph(" Invoice Made with \u2764 by Billing App",font));
+        invoiceCell.disableBorderSide(Rectangle.LEFT);
+        invoiceCell.disableBorderSide(Rectangle.RIGHT);
+        invoiceCell.disableBorderSide(Rectangle.TOP);
+        invoiceCell.disableBorderSide(Rectangle.BOTTOM);
+
+        invoiceCell.setVerticalAlignment(Element.ALIGN_CENTER);
+        invoiceCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+        invoiceCell.setPaddingBottom(5);
+        invoiceCell.setPaddingLeft(5);
+
+        table.addCell(invoiceCell3);
+        table.addCell(invoiceCell);
+
+        document.add(table);
+    }
 
 }

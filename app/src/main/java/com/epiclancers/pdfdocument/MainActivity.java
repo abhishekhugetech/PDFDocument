@@ -11,7 +11,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         CreatePdf createPdf = new CreatePdf();
-        createPdf.generete(this,this);
+        createPdf.generete(this,this,"abhishek");
+        finish();
 
 
     }
