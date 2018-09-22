@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.widget.Toast;
 
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
@@ -20,17 +19,15 @@ import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.Utilities;
-import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.vdurmont.emoji.EmojiParser;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class CreatePdf {
+public class CreatePdfNew {
 
 
     public static String pdfFilePath;
