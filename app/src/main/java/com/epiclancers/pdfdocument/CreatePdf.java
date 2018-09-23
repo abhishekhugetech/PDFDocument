@@ -46,6 +46,7 @@ public class CreatePdf {
         try {
             createPdf(pdfFilePath);
             //createPdfWithTable(pdfFilePath);
+            Toast.makeText(context, "PDF Created Successfully", Toast.LENGTH_SHORT).show();
             return true;
         } catch (Exception e) {
             e.printStackTrace();

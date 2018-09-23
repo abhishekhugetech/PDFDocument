@@ -16,7 +16,7 @@ public class CreatePdfWhenCharging extends Worker {
 
         System.out.println("Starting the Work" + " PDF WORK");
 
-        CreatePdf createPdf = new CreatePdf();
+        CreatePdfNew createPdf = new CreatePdfNew();
         Boolean res = createPdf.generete(getApplicationContext() ,"abhishek");
 
         if(res){

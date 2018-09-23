@@ -17,9 +17,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+/*
         Constraints constraints = new Constraints.Builder().setRequiresCharging(true).build();
         OneTimeWorkRequest task = new OneTimeWorkRequest.Builder(CreatePdfWhenCharging.class).setConstraints(constraints).build();
+        OneTimeWorkRequest task = new OneTimeWorkRequest.Builder(CreatePdfWhenCharging.class).build();
 
         WorkManager workManager = WorkManager.getInstance();
         workManager.enqueue(task);
@@ -30,8 +31,16 @@ public class MainActivity extends AppCompatActivity {
             public void onChanged(@Nullable WorkStatus workStatus) {
                 Toast.makeText(MainActivity.this, "Changing Work Status", Toast.LENGTH_SHORT).show();
                 System.out.println("Changing Work Status");
+                finish();
             }
         });
+
+        */
+
+        CreatePdfNew createPdfNew = new CreatePdfNew();
+        createPdfNew.generete( "abhishek");
+        finish();
+
 
 
 
